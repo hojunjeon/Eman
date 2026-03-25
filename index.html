@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>감정 분석 사이트</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f7fb;
+      color: #222;
+    }
+
+    .wrap {
+      width: 100%;
+      max-width: 700px;
+      margin: 60px auto;
+      background: white;
+      border-radius: 20px;
+      padding: 32px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
+    }
+
+    h1 {
+      margin-top: 0;
+      text-align: center;
+      font-size: 32px;
+    }
+
+    p.desc {
+      text-align: center;
+      color: #666;
+      margin-bottom: 30px;
+    }
+
+    textarea {
+      width: 100%;
+      height: 160px;
+      padding: 16px;
+      border: 1px solid #ccc;
+      border-radius: 12px;
+      resize: none;
+      font-size: 16px;
+      outline: none;
+    }
+
+    textarea:focus {
+      border-color: #4a90e2;
+    }
+
+    .btn-area {
+      display: flex;
+      justify-content: center;
+      margin-top: 20px;
+    }
+
+    button {
+      border: none;
+      background: #4a90e2;
+      color: white;
+      font-size: 16px;
+      padding: 14px 28px;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      background: #357bd8;
+    }
+
+    .result {
+      margin-top: 30px;
+      padding: 20px;
+      border-radius: 16px;
+      background: #f8fafc;
+      border: 1px solid #e5e7eb;
+      display: none;
+    }
+
+    .result h2 {
+      margin-top: 0;
+      font-size: 24px;
+    }
+
+    .item {
+      margin: 12px 0;
+      font-size: 18px;
+    }
+
+    .label {
+      font-weight: bold;
+      color: #333;
+    }
+
+    .loading {
+      text-align: center;
+      margin-top: 20px;
+      color: #4a90e2;
+      display: none;
+      font-weight: bold;
+    }
+
+    .error {
+      margin-top: 20px;
+      color: red;
+      text-align: center;
+      display: none;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>감정 분석기</h1>
+    <p class="desc">영어 문장을 입력하면 감정을 분석해줍니다</p>
+
+    <textarea id="textInput" placeholder="예: I feel so happy today!"></textarea>
+
+    <div class="btn-area">
+      <button onclick="analyzeEmotion()">감정 분석하기</button>
+    </div>
+
+    <div class="loading" id="loading">분석 중...</div>
+    <div class="error" id="error"></div>
+
+    <div class="result" id="resultBox">
+      <h2>분석 결과</h2>
+      <div class="item"><span class="label">입력 문장:</span> <span id="resultText"></span></div>
+      <div class="item"><span class="label">감정:</span> <span id="resultEmotion"></span></div>
+      <div class="item"><span class="label">점수:</span> <span id="resultScore"></span></div>
+    </div>
+  </div>
+
+  <script>
+    async function analyzeEmotion() {
+      const text = document.getElementById("textInput").value;
+      const loading = document.getElementById("loading");
+      const error = document.getElementById("error");
+      const resultBox = document.getElementById("resultBox");
+
+      error.style.display = "none";
+      resultBox.style.display = "none";
+
+      if (!text.trim()) {
+        error.innerText = "문장을 입력해주세요.";
+        error.style.display = "block";
+        return;
+      }
+
+      loading.style.display = "block";
+
+      try {
+        const response = await fetch("http://127.0.0.1:8000/predict", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ text: text })
+        });
+
+        if (!response.ok) {
+          throw new Error("서버 요청 실패");
+        }
+
+        const data = await response.json();
+
+        document.getElementById("resultText").innerText = data["메세지"];
+        document.getElementById("resultEmotion").innerText = data["감정"];
+        document.getElementById("resultScore").innerText = Number(data["점수"]).toFixed(4);
+
+        resultBox.style.display = "block";
+      } catch (e) {
+        error.innerText = "에러 발생: FastAPI 서버가 실행 중인지 확인해주세요.";
+        error.style.display = "block";
+      } finally {
+        loading.style.display = "none";
+      }
+    }
+  </script>
+</body>
+</html>

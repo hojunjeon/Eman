@@ -1,4 +1,4 @@
+torch
+transformers
 uvicorn
 fastapi
-transformers
-torch
